@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import division
+from numpy import *
 import sys, os, string, math, csv
 
 def transpose(a):
@@ -29,3 +30,6 @@ class DataProperties(object):
             # remember when constructing data set with sampled attributes
             # to include status_key at the end
             
+            
+    def pagerank_powermethod(self):
+        matrix = array(self.attributes.values())
