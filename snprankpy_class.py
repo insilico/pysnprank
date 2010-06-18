@@ -56,10 +56,9 @@ class DataProperties(object):
         for i in [1,2,3,4,5]:
             lamb = sum(x)
             x = x/lamb
-        print lamb
+        print x
+        print "lambda = ", lamb
             
-        
-        
         
        
                 
