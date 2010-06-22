@@ -13,53 +13,66 @@ class DataProperties(object):
         self.data = [row for row in reader]
         
         #Store the headers
-        self.header = self.data[0]
+        self.SNPs = self.data[0]
         
-    def pagerank_powermethod(self, p):
-        #Create a matrix with float values
-        matrix = array(self.data[1:],dtype=float32)
+    def powermethod(self, p):
+        #Create a array with float values
+        G = array(self.data[1:],dtype=float32)
         
         #Create a vector of diagonal values
-        Gdiag = matrix.diagonal()
+        Gdiag = G.diagonal()
         
         #Get sum of the diagonal
-        Gtrace = matrix.trace()
+        Gtrace = G.trace()
         
         #Save dimension of matrix
-        [n,n] = matrix.shape
+        [n,n] = G.shape
         
         #Get 1xn row vector of column sums
-        c = matrix.sum(axis=0)
+        colsum = G.sum(axis=0)
         
         #Get nx1 column vector of row sums
-        r = (matrix.sum(axis=1)).reshape(n,1)
+        rowsum = (G.sum(axis=1)).reshape(n,1)
         
         #Get indices of c vector that are not zero
-        k = c.nonzero()
+        colsum_nzidx = colsum.nonzero()
         
-        #Create matrix of zeros
-        D = ones((n,n))
+        #Create matrix of zeros of size nxn
+        D = zeros((n,n))
         
-        z_t = zeros(n)
-        #Create a diagional matrix for formula
-        for i in k[0]:
-                D[i] = Gtrace/c[i]
-                z_t[i] = 1-p
+        #Create a 1xn row vector of ones
+        T_nz = ones(n)
         
-        T = (p * matrix * D + Gdiag * z_t) / Gtrace
+        #Create a diagional matrix and 
+        #a vector of (1-gamma) of size n for the formula
+        for i in colsum_nzidx[0]:
+                D[i] = 1/colsum[i]
+                T_nz[i] = T_nz[i] - p
         
+        T = (p * G * D ) + (Gdiag * T_nz) / Gtrace
+        
+        #Reshape row vector into column vector of ones
         unit = (ones(n)).reshape(n,1)
         
-        x = unit/n;
+        #Initial arbitrary vector
+        r = unit/n;
         
-        x = x*((T.sum(axis=0)).reshape(n,1))
-        for i in [1,2,3,4,5]:
-            lamb = sum(x)
-            x = x/lamb
-        print x
-        print "lambda = ", lamb
-            
+        #Cutoff for matrix convergence
+        threshold = 10**(-4)
+        converged = 0;
         
+        r =  dot(T,r)
+        print r
+        
+        """threshold = 10^(-4)
+        lamb, lamb_temp = 1, 2
+        while (abs(lamb - lamb_temp) < threshold):
+            r = T*r
+            lamb = sum(r)
+            r = r/lamb
+            lamb_temp = lamb
+        #print r.sum(axis = 0).reshape(n,1)
+        print "lambda = ", lamb"""
        
                 
         

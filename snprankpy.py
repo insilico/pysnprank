@@ -14,4 +14,5 @@ except:
 # Create DataProperties object from data file
 full_data = DataProperties(infilename)
 
-full_data.pagerank_powermethod(float(gamma))
+# Call powermethod function
+full_data.powermethod(float(gamma))
