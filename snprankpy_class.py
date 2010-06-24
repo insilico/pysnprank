@@ -50,6 +50,7 @@ class DataProperties(object):
                 T_nz[i] = T_nz[i] - p
         
         T = (p * G * D ) + (Gdiag * T_nz) / Gtrace
+        T = T.transpose()
         
         #Reshape row vector into column vector of ones
         unit = (ones(n)).reshape(n,1)
@@ -59,20 +60,19 @@ class DataProperties(object):
         
         #Cutoff for matrix convergence
         threshold = 10**(-4)
-        converged = 0;
         
-        r =  dot(T,r)
-        print r
+        #Initialize Values
+        converged = False
         
-        """threshold = 10^(-4)
-        lamb, lamb_temp = 1, 2
-        while (abs(lamb - lamb_temp) < threshold):
-            r = T*r
+        while(not converged):
+            r_old = r
+            r = dot(T,r)
             lamb = sum(r)
-            r = r/lamb
-            lamb_temp = lamb
-        #print r.sum(axis = 0).reshape(n,1)
-        print "lambda = ", lamb"""
+            r = r/lamb 
+            if all((abs(r-r_old))<threshold):
+                converged = True
+        print r
+        print "lambda = ", lamb
        
                 
         
