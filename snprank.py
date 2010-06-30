@@ -31,9 +31,6 @@ class DataProperties(object):
         #Get 1xn row vector of column sums
         colsum = G.sum(axis=0)
         
-        #Get nx1 column vector of row sums
-        rowsum = (G.sum(axis=1)).reshape(n,1)
-        
         #Get indices of c vector that are not zero
         colsum_nzidx = colsum.nonzero()
         
