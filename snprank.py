@@ -79,7 +79,7 @@ class DataProperties(object):
     #Output to file function
     def print_to_file(self, SNPs, snp_rank, ig, output):
         column_header = ('SNPs','SNP_RANK','IG')
-        #Create list of tuples of SNPs, snp_rank and Eigenvalues
+        #Create list of tuples of SNPs, snp_rank and InformationGain
         temp = zip(SNPs, snp_rank, ig)
         #Sort the list of tuples by snp_rank, i.e. 2nd value in each tuple
         sort_temp = sorted(temp, key=lambda item:item[1], reverse =True)
@@ -112,7 +112,7 @@ def main():
     #Create data object from class
     full_data = DataProperties(options.infile)
     
-    #Get SNP_rank and Eigenvalues from powermethod()
+    #Get SNP_rank and InformationGain from powermethod()
     snprank, IG = full_data.powermethod(float(options.gamma))
     
     #Print to file
