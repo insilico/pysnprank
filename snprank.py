@@ -6,8 +6,7 @@ import sys, csv, optparse
 def normalize(xs):
 	return xs/sum(xs)
 
-class DataProperties(object):
-    
+class SNPrank(object):
     def __init__(self, infilename):
         #Open file to read
         reader = csv.reader(infilename, delimiter="\t")
@@ -18,7 +17,7 @@ class DataProperties(object):
         #Store all data
         self.data = [row for row in reader]
         
-    def powermethod(self, gamma):
+    def calculate_snprank(self, gamma):
         #Create a array with float values
         G = array(self.data,dtype=float64)
         
@@ -47,7 +46,6 @@ class DataProperties(object):
             T_nz[i] -= gamma
 
         T = (gamma * dot(G,D) ) + (Gdiag.reshape(n,1) * T_nz) / G.trace()
-#        T = T.transpose()
         
         #Initial arbitrary vector
         r = (ones(n)).reshape(n,1)/n;
@@ -67,7 +65,7 @@ class DataProperties(object):
     #Output to file function
     def print_to_file(self, SNPs, snp_rank, ig, output):
         column_header = ('SNPs','SNP_RANK','IG')
-        #Create list of tuples of SNPs, snp_rank and Eigenvalues
+        #Create list of tuples of SNPs, snp_rank and InformationGain
         temp = zip(SNPs, snp_rank, ig)
         #Sort the list of tuples by snp_rank, i.e. 2nd value in each tuple
         sort_temp = sorted(temp, key=lambda item:item[1], reverse =True)
@@ -97,10 +95,10 @@ def main():
     outfile = open(options.outfile, 'w') if options.outfile else sys.stdout
 
     #Create data object from class
-    full_data = DataProperties(infile)
+    full_data = SNPrank(infile)
     
-    #Get SNP_rank and Eigenvalues from powermethod()
-    snprank, IG = full_data.powermethod(float(options.gamma))
+    #Get SNP_rank and InformationGain from powermethod()
+    snprank, IG = full_data.calculate_snprank(float(options.gamma))
     
     #Print to file
     full_data.print_to_file(full_data.SNPs,snprank, IG, outfile)
