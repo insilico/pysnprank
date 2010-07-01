@@ -6,7 +6,8 @@ import sys, csv, optparse
 def normalize(xs):
 	return xs/sum(xs)
 
-class SNPrank(object):
+class SNPrank():
+	"""Provides functions for running SNPrank algorithm on a GAIN matrix"""
 	def __init__(self, infilename):
 		#Open file to read
 		reader = csv.reader(infilename, delimiter="\t")
@@ -18,6 +19,8 @@ class SNPrank(object):
 		self.data = [row for row in reader]
 	
 	def calculate_snprank(self, gamma):
+		"""Runs the SNPrank algorithm on the input data, using gamma as the damping factor.
+		   Returns the SNPrank scores and diagonal (main effect) of original GAIN matrix."""
 		#Create a array with float values
 		G = array(self.data,dtype=float64)
 		
@@ -64,6 +67,7 @@ class SNPrank(object):
 	
 	#Output to file function
 	def print_to_file(self, SNPs, snp_rank, ig, output):
+        	"""Output table of SNP names, SNPranks, information gain, and degree to a file."""
 		writer = csv.writer(output,delimiter='\t')
 		
 		sort_temp = sorted(zip(SNPs, snp_rank, ig), key=lambda item:item[1], reverse =True)
@@ -82,8 +86,7 @@ def main():
 	
 	(options, args) = parser.parse_args()
 	
-	#Check to see if filenames are mentioned,
-	#Open to r/w if not
+	#Check to see if filenames are mentioned, open to r/w if not
 	infile  = open(options.infile,  'r') if options.infile  else sys.stdin
 	outfile = open(options.outfile, 'w') if options.outfile else sys.stdout
 	
@@ -99,6 +102,6 @@ def main():
 	full_data.print_to_file(full_data.SNPs,snprank, IG, outfile)
 	
 	outfile.close()
-          
+        
 if __name__ == "__main__":
 	main()
