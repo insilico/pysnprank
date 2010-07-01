@@ -3,27 +3,27 @@ from __future__ import division
 from numpy import *
 import sys, csv, optparse
 
+def normalize(xs):
+	return xs/sum(xs)
+
 class DataProperties(object):
     
     def __init__(self, infilename):
         #Open file to read
         reader = csv.reader(infilename, delimiter="\t")
         
+        #Store the headers
+        self.SNPs = reader.next()
+
         #Store all data
         self.data = [row for row in reader]
         
-        #Store the headers
-        self.SNPs = self.data[0]
-        
-    def powermethod(self, p):
+    def powermethod(self, gamma):
         #Create a array with float values
-        G = array(self.data[1:],dtype=float32)
+        G = array(self.data,dtype=float64)
         
         #Create a vector of diagonal values
         Gdiag = G.diagonal()
-        
-        #Get sum of the diagonal
-        Gtrace = G.trace()
         
         #Save dimension of matrix
         [n,n] = G.shape
@@ -31,11 +31,8 @@ class DataProperties(object):
         #Get 1xn row vector of column sums
         colsum = G.sum(axis=0)
         
-        #Get nx1 column vector of row sums
-        rowsum = (G.sum(axis=1)).reshape(n,1)
-        
         #Get indices of c vector that are not zero
-        colsum_nzidx = colsum.nonzero()
+        colsum_nzidx = colsum.nonzero()[0]
         
         #Create matrix of zeros of size nxn
         D = zeros((n,n))
@@ -45,33 +42,24 @@ class DataProperties(object):
         
         #Create a diagional matrix and 
         #a vector of (1-gamma) of size n for the formula
-        for i in colsum_nzidx[0]:
-            D[i] = 1/colsum[i]
-            T_nz[i] = T_nz[i] - p
-        
-        T = (p * G * D ) + (Gdiag * T_nz) / Gtrace
-        T = T.transpose()
-        
-        #Reshape row vector into column vector of ones
-        unit = (ones(n)).reshape(n,1)
+        for i in colsum_nzidx:
+            D[i][i] = 1/colsum[i]
+            T_nz[i] -= gamma
+
+        T = (gamma * dot(G,D) ) + (Gdiag.reshape(n,1) * T_nz) / G.trace()
+#        T = T.transpose()
         
         #Initial arbitrary vector
-        r = unit/n;
+        r = (ones(n)).reshape(n,1)/n;
         
         #Cutoff for matrix convergence
         threshold = 10**(-4)
         
-        #Initialize Values
-        converged = False
-        
         #Initiate convergence and SNP ranking
-        while(not converged):
-            r_old = r
-            r = dot(T,r)
-            lamb = sum(r)
-            r = r/lamb 
+        while True:
+            r_old, r = r, normalize(dot(T,r))
             if all((abs(r-r_old))<threshold):
-                converged = True
+                break
                 
         #Return SNP_rank and diagonal of GAIN matrix
         return r.reshape(1,n)[0],Gdiag
@@ -85,38 +73,37 @@ class DataProperties(object):
         sort_temp = sorted(temp, key=lambda item:item[1], reverse =True)
         #write column headings to file
         output.write("\t".join(head for head in column_header))
+        output.write("\n")
         #Write values to file
         for x in range(len(sort_temp)):
-            output.write("\n")
             output.write("\t".join(str(value) for value in sort_temp[x]))
+            output.write("\n")
         output.close()
 
 #Define main function       
 def main():
     #Create option parser
-    parser = optparse.OptionParser("usage: %prog -f FILENAME -o OUTPUT -g GAMMA VALUE")
+    parser = optparse.OptionParser("usage: %prog -f INFILE -o OUTFILE -g GAMMA")
     #Add options to parser; use defaults if none specified
-    parser.add_option("-f", "--file", dest="infile", help="read data from FILENAME", default=sys.stdin, action ='store')
-    parser.add_option("-o", "--output", dest="outfile", help="output to FILENAME", default=sys.stdout)
-    parser.add_option("-g", "--gamma", dest="gamma", help="gamma value", default=.85)
+    parser.add_option("-f", "--file", dest="infile", help="read data from INFILE")
+    parser.add_option("-o", "--output", dest="outfile", help="output to OUTFILE")
+    parser.add_option("-g", "--gamma", dest="gamma", help="gamma value (default: .85)", default=.85)
     
     (options, args) = parser.parse_args()
     
     #Check to see if filenames are mentioned,
     #Open to r/w if not
-    if type(options.infile)==type('string'):
-        options.infile = open(options.infile, 'r')
-    if type(options.outfile)==type('string'):
-        options.outfile = open(options.outfile, 'w')
-        
+    infile  = open(options.infile,  'r') if options.infile  else sys.stdin
+    outfile = open(options.outfile, 'w') if options.outfile else sys.stdout
+
     #Create data object from class
-    full_data = DataProperties(options.infile)
+    full_data = DataProperties(infile)
     
     #Get SNP_rank and Eigenvalues from powermethod()
     snprank, IG = full_data.powermethod(float(options.gamma))
     
     #Print to file
-    full_data.print_to_file(full_data.SNPs,snprank, IG, options.outfile)
+    full_data.print_to_file(full_data.SNPs,snprank, IG, outfile)
     
           
 if __name__ == "__main__":
