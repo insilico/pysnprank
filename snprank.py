@@ -3,7 +3,7 @@ from __future__ import division
 from numpy import *
 import sys, csv, optparse
 
-class DataProperties(object):
+class SNPrank(object):
     
     def __init__(self, infilename):
         #Open file to read
@@ -15,7 +15,7 @@ class DataProperties(object):
         #Store the headers
         self.SNPs = self.data[0]
         
-    def powermethod(self, p):
+    def calculate_snprank(self, gamma):
         #Create a array with float values
         G = array(self.data[1:],dtype=float32)
         
@@ -44,9 +44,9 @@ class DataProperties(object):
         #a vector of (1-gamma) of size n for the formula
         for i in colsum_nzidx[0]:
             D[i] = 1/colsum[i]
-            T_nz[i] = T_nz[i] - p
+            T_nz[i] = T_nz[i] - gamma
         
-        T = (p * G * D ) + (Gdiag * T_nz) / Gtrace
+        T = (gamma * G * D ) + (Gdiag * T_nz) / Gtrace
         T = T.transpose()
         
         #Reshape row vector into column vector of ones
@@ -107,10 +107,10 @@ def main():
         options.outfile = open(options.outfile, 'w')
         
     #Create data object from class
-    full_data = DataProperties(options.infile)
+    full_data = SNPrank(options.infile)
     
     #Get SNP_rank and InformationGain from powermethod()
-    snprank, IG = full_data.powermethod(float(options.gamma))
+    snprank, IG = full_data.calculate_snprank(float(options.gamma))
     
     #Print to file
     full_data.print_to_file(full_data.SNPs,snprank, IG, options.outfile)
