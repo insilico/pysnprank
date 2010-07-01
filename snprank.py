@@ -72,7 +72,7 @@ class SNPrank:
 
 def main():
 	# Create option parser
-	parser = optparse.OptionParser("usage: %prog [OPTIONS]")
+	parser = optparse.OptionParser(usage="%prog [OPTIONS]", version="%prog 0.1")
 	# Add options to parser; use defaults if none specified
 	parser.add_option("-i", "--input", dest="infile", help="read data from INFILE")
 	parser.add_option("-o", "--output", dest="outfile", help="output to OUTFILE")
