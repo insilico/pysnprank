@@ -7,6 +7,7 @@ def normalize(xs):
 	return xs/sum(xs)
 
 class SNPrank(object):
+	"""Provides functions for running SNPrank algorithm on a GAIN matrix"""
     def __init__(self, infilename):
         #Open file to read
         reader = csv.reader(infilename, delimiter="\t")
@@ -18,6 +19,8 @@ class SNPrank(object):
         self.data = [row for row in reader]
         
     def calculate_snprank(self, gamma):
+		"""Runs the SNPrank algorithm on the input data, using gamma as the damping factor.
+		   Returns the SNPrank scores and diagonal (main effect) of original GAIN matrix."""
         #Create a array with float values
         G = array(self.data,dtype=float64)
         
@@ -59,13 +62,13 @@ class SNPrank(object):
             if all((abs(r-r_old))<threshold):
                 break
                 
-        #Return SNP_rank and diagonal of GAIN matrix
+        #Return SNPrank and diagonal of GAIN matrix
         return r.reshape(1,n)[0],Gdiag
     
-    #Output to file function
     def print_to_file(self, SNPs, snp_rank, ig, output):
-        column_header = ('SNPs','SNP_RANK','IG')
-        #Create list of tuples of SNPs, snp_rank and InformationGain
+        """Output table of SNP names, SNPranks, information gain, and degree to a file."""
+        column_header = ('SNPs','SNPrank','IG')
+        #Create list of tuples of SNPs, SNPrank and information gain
         temp = zip(SNPs, snp_rank, ig)
         #Sort the list of tuples by snp_rank, i.e. 2nd value in each tuple
         sort_temp = sorted(temp, key=lambda item:item[1], reverse =True)
@@ -89,15 +92,14 @@ def main():
     
     (options, args) = parser.parse_args()
     
-    #Check to see if filenames are mentioned,
-    #Open to r/w if not
+    #Check to see if filenames are mentioned, open to r/w if not
     infile  = open(options.infile,  'r') if options.infile  else sys.stdin
     outfile = open(options.outfile, 'w') if options.outfile else sys.stdout
 
     #Create data object from class
     full_data = SNPrank(infile)
     
-    #Get SNP_rank and InformationGain from powermethod()
+    #Get SNPrank and information gain from calculate_snprank()
     snprank, IG = full_data.calculate_snprank(float(options.gamma))
     
     #Print to file
