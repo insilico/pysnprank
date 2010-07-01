@@ -4,68 +4,63 @@ from numpy import *
 import sys, csv, optparse
 
 def normalize(xs):
+	"""Normalize a numpy array"""
 	return xs/sum(xs)
 
-class SNPrank():
+class SNPrank:
 	"""Provides functions for running SNPrank algorithm on a GAIN matrix"""
 	def __init__(self, infilename):
-		#Open file to read
+		"""Initialize SNPrank object with GAIN file object"""
+
 		reader = csv.reader(infilename, delimiter="\t")
 		
-		#Store the headers
+		# The first row is the SNP labels
 		self.SNPs = reader.next()
 		
-		#Store all data
-		self.data = [row for row in reader]
+		self.GAIN = array([row for row in reader], dtype=float64)
 	
 	def calculate_snprank(self, gamma):
 		"""Runs the SNPrank algorithm on the input data, using gamma as the damping factor.
 		   Returns the SNPrank scores and diagonal (main effect) of original GAIN matrix."""
-		#Create a array with float values
-		G = array(self.data,dtype=float64)
+
+		# A GAIN matrix is an NxN matrix
+		m,n = self.GAIN.shape
+		if m != n:
+			raise ValueError("Input is not an NxN matrix")
+
+		# Vector of column sums
+		colsum = self.GAIN.sum(axis=0)
 		
-		#Create a vector of diagonal values
-		Gdiag = G.diagonal()
-		
-		#Save dimension of matrix
-		[n,n] = G.shape
-		
-		#Get 1xn row vector of column sums
-		colsum = G.sum(axis=0)
-		
-		#Get indices of c vector that are not zero
+		# Get indices of c vector that are not zero
 		colsum_nzidx = colsum.nonzero()[0]
 		
-		#Create matrix of zeros of size nxn
 		D = zeros((n,n))
-		
-		#Create a 1xn row vector of ones
 		T_nz = ones(n)
 		
-		#Create a diagional matrix and 
-		#a vector of (1-gamma) of size n for the formula
+		# Where a column doesn't sum to 0, the diagonal in D
+		# ought to be the reciprocal of the column sum.
+		# Likewize T_nz ought to be 1-gamma rather than 1.
 		for i in colsum_nzidx:
 			D[i][i] = 1/colsum[i]
 			T_nz[i] = 1 - gamma
 		
-		T = (gamma * dot(G,D) ) + (Gdiag.reshape(n,1) * T_nz) / G.trace()
+		# Transition matrix
+		T = (gamma * dot(self.GAIN,D) ) + (self.GAIN.diagonal().reshape(n,1) * T_nz) / self.GAIN.trace()
 		
-		#Initial arbitrary vector
+		# r is an arbitrary vector, which we initialize to 1/n
 		r = (ones(n)).reshape(n,1)/n;
 		
-		#Cutoff for matrix convergence
+		# Cutoff for matrix convergence
 		threshold = 10**(-4)
 		
-		#Initiate convergence and SNP ranking
+		# Multiply r by T until r converges to within the threshold
 		while True:
 			r_old, r = r, normalize(dot(T,r))
-			if all((abs(r-r_old))<threshold):
+			if all( abs(r-r_old) < threshold ):
 				break
 		        
-		#Return SNP_rank and diagonal of GAIN matrix
-		return r.reshape(1,n)[0],Gdiag
+		return r.reshape(1,n)[0], self.GAIN.diagonal()
 	
-	#Output to file function
 	def print_to_file(self, SNPs, snp_rank, ig, output):
         	"""Output table of SNP names, SNPranks, information gain, and degree to a file."""
 		writer = csv.writer(output,delimiter='\t')
@@ -75,33 +70,48 @@ class SNPrank():
 		writer.writerow(['SNPs','SNP_RANK','IG'])
 		writer.writerows((map(str,vals) for vals in sort_temp))
 
-#Define main function       
 def main():
-	#Create option parser
-	parser = optparse.OptionParser("usage: %prog -i INFILE -o OUTFILE -g GAMMA")
-	#Add options to parser; use defaults if none specified
+	# Create option parser
+	parser = optparse.OptionParser("usage: %prog [OPTIONS]")
+	# Add options to parser; use defaults if none specified
 	parser.add_option("-i", "--input", dest="infile", help="read data from INFILE")
 	parser.add_option("-o", "--output", dest="outfile", help="output to OUTFILE")
 	parser.add_option("-g", "--gamma", dest="gamma", help="gamma value (default: .85)", default=.85)
 	
 	(options, args) = parser.parse_args()
 	
-	#Check to see if filenames are mentioned, open to r/w if not
-	infile  = open(options.infile,  'r') if options.infile  else sys.stdin
-	outfile = open(options.outfile, 'w') if options.outfile else sys.stdout
+	# Check to see if filenames are mentioned, open to r/w if not
+	try:
+		infile  = open(options.infile,  'r') if options.infile  else sys.stdin
+	except IOError as err:
+		if err.errno != 2:
+			raise err
+		print "Error: Input file could not be opened."
+		parser.print_help()
+		return 1
+
+	try:
+		outfile = open(options.outfile, 'w') if options.outfile else sys.stdout
+	except IOError as err:
+		if err.errno != 2:
+			raise err
+		print "Error: Output file could not be opened."
+		parser.print_help()
+		return 1
 	
-	#Create data object from class
+	# Create data object from class
 	full_data = SNPrank(infile)
 	
 	infile.close()
 	
-	#Get SNP_rank and InformationGain from powermethod()
+	# Get SNPrank and information gain from calculate_snprank
 	snprank, IG = full_data.calculate_snprank(float(options.gamma))
 	
-	#Print to file
+	# Print to file
 	full_data.print_to_file(full_data.SNPs,snprank, IG, outfile)
 	
 	outfile.close()
+	return 0
         
 if __name__ == "__main__":
-	main()
+	sys.exit(main())
