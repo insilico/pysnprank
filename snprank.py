@@ -7,9 +7,9 @@
 # information gain, sorted in descending order by SNPrank.
 #
 # Authors:  Brett McKinney <brett.mckinney@gmail.com>
-#			Nick Davis <nick@nickdavis.name> 
-#			Ahwan Pandey <ahwan-pandey@utulsa.edu>  
-#			Chris Johnson <chris-johnson@utulsa.edu>
+#           Nick Davis <nick@nickdavis.name> 
+#           Ahwan Pandey <ahwan-pandey@utulsa.edu>  
+#           Chris Johnson <chris-johnson@utulsa.edu>
 from __future__ import division
 from numpy import *
 import sys, csv, optparse
