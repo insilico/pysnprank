@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# SNPrank - SNP ranking algorithm
+# SNPrank - single nucleotide polymorphism (SNP) ranking algorithm
 
 # Uses a GAIN file, together with a damping factor gamma, 
 # (default is .85), to compute SNPrank scores.
