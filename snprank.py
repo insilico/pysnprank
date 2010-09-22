@@ -67,8 +67,8 @@ class SNPrank:
 		
 		sort_temp = sorted(zip(SNPs, snp_rank, ig), key=lambda item:item[1], reverse =True)
 		
-		writer.writerow(['SNPs','SNP_RANK','IG'])
-		writer.writerows((map(str,vals) for vals in sort_temp))
+		writer.writerow(['SNP','SNPrank','IG'])
+		map(output.write,("%s\t%.6f\t%.6f\n" % tuple(vals) for vals in sort_temp))
 
 def main():
 	# Create option parser
