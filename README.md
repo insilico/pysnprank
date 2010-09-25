@@ -21,14 +21,28 @@ platform supported by Python (Python version 2.6.5 tested).
 pysnprank requires [NumPy](http://numpy.scipy.org) for matrix computations 
 (tested with NumPy version 1.3.0).
 
-A GPU can be used for accelerated matrix computations.  [CUDAMat] 
-(http://code.google.com/p/cudamat), an open source library for GPU matrix 
- calculations, is required.  See the CUDAMat site for more details on
- prerequisites. 
+A GPU can be used for accelerated matrix computations.  [CUDAMat](http://code.google.com/p/cudamat), 
+an open source library for GPU matrix calculations, is required.  See the CUDAMat 
+site for more details on prerequisites. 
 
 To run pysnprank from command-line:
 
-    ./snprank -i gain-matrix.txt -o output.txt
+    ./snprank.py -i gain-matrix.txt -o output.txt
+
+Additional parameters:
+
+    Usage: snprank.py [OPTIONS]
+
+	Options:
+      --version             show program's version number and exit
+      -h, --help            show this help message and exit
+      -i INFILE, --input=INFILE
+                            read data from INFILE
+      -o OUTFILE, --output=OUTFILE
+                            output to OUTFILE
+      -g GAMMA, --gamma=GAMMA
+                            gamma value (default: .85)
+      -n, --gpu             enable GPU
 
 ### Contributors ###
 See AUTHORS file.
